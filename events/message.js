@@ -4,6 +4,9 @@ const prefix = "$"
 // Library requirements
 const { MessageAttachment, Message } = require("discord.js")
 const ytdl = require("ytdl-core")
+const got = require('got');
+const jsdom = require('jsdom');
+const { JSDOM } = jsdom;
 
 // Steam Options for YTDL
 const streamOptions = {
@@ -17,13 +20,52 @@ const jimmyPics = [
     new MessageAttachment('img/jimmy3.jpg'),
     new MessageAttachment('img/jimmy4.jpg'),
     new MessageAttachment('img/jimmy5.jpg'),
-    new MessageAttachment('img/jimmy6.jpg')
+    new MessageAttachment('img/jimmy6.jpg'),
+    new MessageAttachment('img/jimmy7.jpg'),
+    new MessageAttachment('img/jimmy8.png'),
+    new MessageAttachment('img/jimmy9.jpg'),
+    new MessageAttachment('img/jimmy10.jpg'),
+    new MessageAttachment('img/jimmy11.jpg'),
+    new MessageAttachment('img/jimmy12.jpg'),
+    new MessageAttachment('img/jimmy13.gif'),
+    new MessageAttachment('img/jimmy14.gif'),
+    new MessageAttachment('img/jimmy15.gif'),
+    new MessageAttachment('img/jimmy16.gif'),
+    new MessageAttachment('img/jimmy17.gif')
 ]
 
 const adminCommands = [
     "controls",
-    "message"
+    "message",
+    "status"
 ]
+
+// Used to send Steam deals to the server via isthhereanydeal.com
+function getGameSales(message){
+    const mainLink = "https://isthereanydeal.com/#/filter:steam;/options:mature";
+    var sales = [];
+
+    got(mainLink).then(response => {
+        const dom = new JSDOM(response.body);
+        dom.window.document.querySelectorAll('#games').forEach(e => {
+            e.querySelectorAll('.title').forEach(j => {
+                var x = String(j.querySelector('a').textContent);
+                sales.push(x);
+            });
+            var msg = "Today's Most Popular Deals on Steam:\n----------------------------------\n";
+            for (var i = 0; i < 10; i++){
+                msg += sales[i] + "\n";
+                console.log(sales[i]);
+            }
+            msg += "----------------------------------\nView more deals here: https://isthereanydeal.com/#/filter:steam;/options:mature"
+            
+            message.channel.send(msg);
+        });
+    }).catch(err => {
+        message.channel.send("Error getting data. Please try command again later.")
+        console.log(err);
+    });
+}
 
 // Used to play the given YouTube link in the message sender's voice channel
 function playLink(message, link){
@@ -73,14 +115,11 @@ module.exports = (client, message) => {
         var command = whole[0]
         var user = message.author
 
-        // warning
-        if (command == "warning"){
-            playLink(message, "https://www.youtube.com/watch?v=SEQc0A3jM9A")
-        }
+        
         // pic
-        else if (command == "pic"){
+        if (command == "pic"){
             var index = Math.floor(Math.random() * jimmyPics.length)
-            message.channel.send("Yoo what's good Jimmy :sunglasses: :point_right: :point_right:", jimmyPics[index])
+            message.channel.send("Yoo look it's Jimmy! :sunglasses: :point_right: :point_right:", jimmyPics[index])
         }
         // share
         else if (command == "share" && isUserOnSpotify(user) !== 0){
@@ -113,37 +152,40 @@ module.exports = (client, message) => {
         else if (command == "movie"){
             message.channel.send("https://www.youtube.com/watch?v=Db9eo6NBdi8")
         }
+        // prayer
+        else if (command == "prayer"){
+            var t = new MessageAttachment('img/bible.jpg')
+            message.reply("you have been blessed my child.", t);
+        }
         // ERROR FOR share
         else if (command == "share" && isUserOnSpotify(user) === 0){
             message.reply("to use this command your Spotify must be connected to your Discord and the \"Display Spotify as your status\" setting must be turned on. You can enable this in Settings -> Connections")
+        }
+        // deals
+        else if (command == "deals"){
+            getGameSales(message);
         }  
         // help
         else if (command == "help"){
             var text = "```Jimmy Bot Commands\n" +
             "***NOTE: FOR ANY ADMIN HELP PLEASE DM THE BOT***\n" +
             "-------------------------\n" +
-            "VOICE CHANNEL SOUND COMMANDS\n\n" +
-            "$warning\n" +
-            "-------------------------\n" +
             "COMMANDS\n" +
             "(Anything in \"<>\"s are other things the command needs to work.)\n\n" +
             "$movie\n" +
             "$info\n" +
             "$pic\n" +
+            "$prayer\n" +
             "$share >> Shares the current song you are listening to on Spotify.\n" +
+            "$deals >> See what games on Steam are on sale today.\n" +
             "-------------------------```"
-
-            var channel = message.channel
-            channel.send(text)
+            
+            message.channel.send(text);
 
             // Raw Text
             /*
             Jimmy Bot Commands
             ***NOTE: FOR ANY ADMIN HELP PLEASE DM THE BOT***
-            -------------------------
-            VOICE CHANNEL SOUND COMMANDS
-
-            $warning
             -------------------------
             COMMANDS
             (Anything in "<>"s are other things the command needs to work.)
@@ -151,7 +193,9 @@ module.exports = (client, message) => {
             $movie
             $info
             $pic
+            $prayer
             $share >> Shares the current song you are listening to on Spotify.
+            $deals >> See what games on Steam are on sale today.
             -------------------------
             */
         }
@@ -188,12 +232,29 @@ module.exports = (client, message) => {
                                 sendTo.send(msg).catch(error => {console.log(error)})
                             }
                         }
+                        // status <new status>
+                        else if (command == "status" && message.channel.id === mess.id){
+                            if (whole[1] == null){
+                                message.reply("You must include a new status if you would like to use this command.")
+                            } else {
+                                var text = ""
+                                for (var i = 1; i < whole.length; i++){
+                                    if (i == whole.length - 1){
+                                        text += whole[i]
+                                    } else {
+                                        text += whole[i] + " "
+                                    } 
+                                }
+                                client.user.setPresence({activity: {name: text}}).catch(console.error)
+                            }
+                        }
                         // controls
                         else if (command == "controls" && message.channel.id === mess.id){
                             var text = "```Admin Jimmy Bot Commands\n" +
                             "(Please note that \"$controls\" is for admin controls, while \"$help\" is for public commands)\n" +
                             "-------------------------\n" +
-                            "$message <@user> <message content> >> Messages the given user with the Jimmy Bot.\n" +
+                            "$message <@user> <message content> >> Messages the given user with the Jimmy Bot.\n\n" +
+                            "$status <new status> >> Changes the status of the Jimmy Bot (will start with \"Playing\").\n" +
                             "-------------------------```"
 
                             mess.send(text).catch(error => {console.log(error)})
@@ -204,12 +265,16 @@ module.exports = (client, message) => {
                             (Please note that "$controls" is for admin help, while "$help" is for public commands)
                             -------------------------
                             $message <@user> <message content> >> Messages the given user with the Jimmy Bot.
+                            $status <new status> >> Changes the status of the Jimmy Bot (will start with "Playing").
                             -------------------------
                             */
                         }
                     })
                 }
             })
+        }
+        else {
+            message.reply("I don't recognize this command. Try another one.")
         }
     }
 

@@ -16,6 +16,8 @@
     "ffbinaries": "^1.1.4",
     "ffmpeg": "0.0.4",
     "fluent-ffmpeg": "^2.1.2",
+    "got": "^11.8.2",
+    "jsdom": "^16.5.1",
     "nodemon": "^2.0.4",
     "opusscript": "0.0.7",
     "ytdl-core": "^3.4.2"
