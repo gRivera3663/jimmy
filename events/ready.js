@@ -3,5 +3,5 @@ module.exports = client => {
     console.log(`Logged in as ${client.user.tag}`)
 
     // Adds custom status
-    client.user.setPresence({activity: {name: "Nonya"}}).catch(console.error)
+    // client.user.setPresence({activity: {name: "Nonya"}}).catch(console.error)
 }

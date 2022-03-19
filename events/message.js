@@ -9,12 +9,6 @@ const jsdom = require('jsdom')
 const { JSDOM } = jsdom
 const yts = require("yt-search")
 
-// Steam Options for YTDL
-const streamOptions = {
-    format: "audioonly",
-    quality: "highestaudio"
-}
-
 // Pictures for $pic
 const jimmyPics = [
     new MessageAttachment('img/jimmy1.jpg'),
@@ -42,6 +36,19 @@ const adminCommands = [
     "message",
     "status",
     "clear"
+]
+
+// List of public commands
+const publicCommands = [
+    "movie",
+    "who",
+    "pic",
+    "prayer",
+    "share",
+    "deals",
+    "play",
+    "skip",
+    "queue"
 ]
 
 // Music queue variables
@@ -444,7 +451,9 @@ module.exports = (client, message) => {
             })
         }
         else {
-            message.reply("I don't recognize this command. Try another one.")
+            if (!publicCommands.includes(command) && isNaN(command) && whole.length == 1){                   // isNaN is being used so a valid use of '$' as a dollar sign can be used in convo
+                message.reply("I don't recognize this command. Try another one.")
+            }
         }
     }
 
@@ -457,10 +466,10 @@ module.exports = (client, message) => {
             var channel = msg.channels.cache.find(channel => channel.name === 'admin')
             if (channel == undefined){
                 var sending = client.users.cache.find(usr => usr.id === user)
-                sending.send("Jimmy is not able to be used for admin support at this time.").catch(error => {console.log(error)})
+                sending.send("Jimmy is not available right now.").catch(error => {console.log(error)})
             } else {
                 if (user != botID){
-                    var temp = "<@" + user + "> sent a message to Jimmy: " + dm
+                    var temp = "Message from <@" + user + ">: " + dm
                     channel.send(temp).catch(error => {console.log(error)})
                 }
             }
